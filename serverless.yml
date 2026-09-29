@@ -49,7 +49,7 @@ resources:
         AttributeDefinitions:
           - AttributeName: event_id
             AttributeType: S
-          - AttributeName: mobile_number
+          - AttributeName: is_conversation_present
             AttributeType: S
           - AttributeName: received_at
             AttributeType: S
@@ -57,9 +57,9 @@ resources:
           - AttributeName: event_id
             KeyType: HASH
         GlobalSecondaryIndexes:
-          - IndexName: mobile_number-received_at-index
+          - IndexName: is_conversation_present-received_at-index
             KeySchema:
-              - AttributeName: mobile_number
+              - AttributeName: is_conversation_present
                 KeyType: HASH
               - AttributeName: received_at
                 KeyType: RANGE

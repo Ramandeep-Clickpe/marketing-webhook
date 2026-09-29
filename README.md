@@ -15,10 +15,13 @@ Table: `marketing-whatsapp-events-<stage>`
 | --- | --- |
 | `event_id` | Partition key, generated UUID |
 | `received_at` | ISO-8601 UTC time the webhook was received |
-| `raw_payload` | Full event JSON as received |
-| `user_id`, `mobile_number`, `status`, `message_id`, `event_timestamp` | Best-effort extraction (see `FIELD_CANDIDATES` in `handler.py`); update once the Karix payload format is known |
+| `is_conversation_present` | `"true"` / `"false"` — whether the status contains a `conversation` object |
+| `display_mobile_number` | `value.metadata.display_phone_number` (our sender number) |
+| `recipient_id` | `statuses[].recipient_id` (customer number) |
+| `raw_payload` | Full webhook JSON as received |
 
-GSI `mobile_number-received_at-index` allows looking up all events for a number.
+One row is stored per entry in `statuses`. GSI `is_conversation_present-received_at-index`
+allows querying events by that flag, sorted by time.
 
 ## Deploy
 
