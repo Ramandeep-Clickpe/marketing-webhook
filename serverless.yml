@@ -1,0 +1,69 @@
+service: marketing-webhook
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.12
+  stage: ${opt:stage}
+  region: ap-south-1
+  environment:
+    CURRENT_STAGE: ${opt:stage}
+    LOG_LEVEL: ${self:custom.log_state.${sls:stage}}
+    EVENTS_TABLE: ${self:custom.events_table}
+  tags:
+    env: ${self:provider.environment.CURRENT_STAGE}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:BatchWriteItem
+          Resource:
+            - Fn::GetAtt: [WhatsappEventsTable, Arn]
+
+custom:
+  stage: ${opt:stage}
+  events_table: marketing-whatsapp-events-${sls:stage}
+  log_state:
+    dev: INFO
+    prod: INFO
+
+functions:
+  karixWebhook:
+    handler: handler.karix_webhook
+    timeout: 10
+    events:
+      - httpApi:
+          path: /webhook/karix
+          method: POST
+
+resources:
+  Resources:
+    WhatsappEventsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.events_table}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: event_id
+            AttributeType: S
+          - AttributeName: mobile_number
+            AttributeType: S
+          - AttributeName: received_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: event_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: mobile_number-received_at-index
+            KeySchema:
+              - AttributeName: mobile_number
+                KeyType: HASH
+              - AttributeName: received_at
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
