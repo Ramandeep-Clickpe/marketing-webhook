@@ -27,7 +27,7 @@ custom:
   stage: ${opt:stage}
   events_table: marketing-whatsapp-events-${sls:stage}
   log_state:
-    dev: INFO
+    dev: DEBUG
     prod: INFO
 
 functions:
